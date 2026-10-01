@@ -11,7 +11,8 @@ A mobile-friendly Next.js dashboard for viewing your own Gmail messages and Goog
 - Drive metadata-only search/list endpoint.
 - AES-256-GCM encrypted token storage in Supabase, server-side only.
 - Token refresh, disconnect, and revoke flow.
-- Baseline security headers.
+- Baseline security headers
+- Server-side YouTube Data API v3 search for public videos, with thumbnails and embedded playback.
 
 The app does not send email, edit or delete files, or change Drive sharing permissions.
 
@@ -45,6 +46,7 @@ Copy the values into Vercel Project Settings → Environment Variables. Do not c
 - `APP_ENCRYPTION_KEY` — use a long, random server-only secret
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `YOUTUBE_API_KEY` — optional; a YouTube Data API v3 key used only by the server-side search endpoint
 
 Redeploy after setting or changing environment variables.
 
@@ -64,3 +66,14 @@ Requested scopes are OpenID/email identity, Gmail read-only, and Drive metadata 
 - Tokens are encrypted before storage using AES-256-GCM. The encryption key is read only on the server.
 - Keep the repository private if you later add project-specific configuration.
 - If a Google account is blocked by a Workspace administrator, use an account you are authorized to connect or ask the administrator about access.
+
+## 6. Enable YouTube video search (optional)
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), select the same or a separate project.
+2. Open **APIs & Services → Library**, search for **YouTube Data API v3**, and click **Enable**.
+3. Open **APIs & Services → Credentials** and create an API key.
+4. Under API key restrictions, restrict the key to **YouTube Data API v3**. Because the key is used by a server-side Vercel route, do not use a browser HTTP-referrer restriction; use API restrictions and monitor quotas. Do not expose the key in client-side code or commit a real key.
+5. In Vercel → Project → Settings → Environment Variables, add `YOUTUBE_API_KEY` with the key as its value for Production (and Preview if needed), then redeploy.
+6. Open the app and select **YouTube** in the sidebar. Search public videos and select a result to play it in the embedded player.
+
+The search uses YouTube Data API quota. Search results and playback may be limited by API quota, video owner embedding settings, regional restrictions, or network policies. The feature searches public videos and does not require connecting a Google account.
