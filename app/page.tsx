@@ -9,7 +9,7 @@ type YouTubeVideo = { id: string; title: string; channelTitle: string; descripti
 export default function Home() {
   const [connected, setConnected] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [tab, setTab] = useState<"overview" | "gmail" | "drive" | "youtube" | "privacy">("overview");
+  const [tab, setTab] = useState<"overview" | "gmail" | "drive" | "youtube" | "shorts" | "privacy">("overview");
   const [mail, setMail] = useState<Mail[]>([]);
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [mailQuery, setMailQuery] = useState("");
@@ -17,6 +17,9 @@ export default function Home() {
   const [youtubeQuery, setYoutubeQuery] = useState("");
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [shortsQuery, setShortsQuery] = useState("");
+  const [shortsVideos, setShortsVideos] = useState<YouTubeVideo[]>([]);
+  const [selectedShort, setSelectedShort] = useState<YouTubeVideo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -76,6 +79,20 @@ export default function Home() {
     finally { setBusy(false); }
   };
 
+  const searchShorts = async () => {
+    const query = shortsQuery.trim();
+    if (query.length < 2) { setError("Enter at least 2 characters to search Shorts."); return; }
+    setBusy(true); setError(""); setNotice(""); setSelectedShort(null);
+    try {
+      const response = await fetch("/api/youtube?q=" + encodeURIComponent(query) + "&shorts=true", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not search Shorts.");
+      setShortsVideos(data.videos || []);
+      if (!(data.videos || []).length) setNotice("No short videos found. Try a different search.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not search Shorts."); }
+    finally { setBusy(false); }
+  };
+
   const disconnect = async () => {
     setBusy(true); setError("");
     try {
@@ -91,16 +108,16 @@ export default function Home() {
     <aside className="sidebar">
       <a className="brand" href="/" aria-label="Google Services home"><span className="brandIcon">G</span><span>Google Services<small>MAIL & DRIVE</small></span></a>
       <div className="sideLabel">WORKSPACE</div>
-      {(["overview", "gmail", "drive", "youtube", "privacy"] as const).map(item => <button key={item} className={"navItem " + (tab === item ? "active" : "")} onClick={() => setTab(item)}>
-        <span className="navIcon">{item === "overview" ? "◫" : item === "gmail" ? "✉" : item === "drive" ? "▱" : item === "youtube" ? "▶" : "◇"}</span>
-        {item === "overview" ? "Overview" : item === "gmail" ? "Gmail" : item === "drive" ? "Google Drive" : item === "youtube" ? "YouTube" : "Privacy & security"}
+      {(["overview", "gmail", "drive", "youtube", "shorts", "privacy"] as const).map(item => <button key={item} className={"navItem " + (tab === item ? "active" : "")} onClick={() => setTab(item)}>
+        <span className="navIcon">{item === "overview" ? "◫" : item === "gmail" ? "✉" : item === "drive" ? "▱" : item === "youtube" ? "▶" : item === "shorts" ? "▮" : "◇"}</span>
+        {item === "overview" ? "Overview" : item === "gmail" ? "Gmail" : item === "drive" ? "Google Drive" : item === "youtube" ? "YouTube" : item === "shorts" ? "Shorts" : "Privacy & security"}
         {item === "gmail" || item === "drive" ? <span className="navLock">•</span> : null}
       </button>)}
       <div className="sidebarBottom"><span className={"statusDot " + (connected ? "green" : "")}/>{connected ? "Google connected" : "Not connected"}<small>Private session</small></div>
     </aside>
 
     <section className="mainArea">
-      <header className="topbar"><div className="mobileBrand"><span className="brandIcon">G</span> Google Services</div><div className="breadcrumb">Personal workspace <span>/</span> {tab === "overview" ? "Overview" : tab === "gmail" ? "Gmail" : tab === "drive" ? "Google Drive" : tab === "youtube" ? "YouTube" : "Privacy & security"}</div><div className="topRight"><span className={"pill " + (connected ? "pillGreen" : "")}><i/> {connected ? "Connected" : "Not connected"}</span><div className="avatar">D</div></div></header>
+      <header className="topbar"><div className="mobileBrand"><span className="brandIcon">G</span> Google Services</div><div className="breadcrumb">Personal workspace <span>/</span> {tab === "overview" ? "Overview" : tab === "gmail" ? "Gmail" : tab === "drive" ? "Google Drive" : tab === "youtube" ? "YouTube" : tab === "shorts" ? "Shorts" : "Privacy & security"}</div><div className="topRight"><span className={"pill " + (connected ? "pillGreen" : "")}><i/> {connected ? "Connected" : "Not connected"}</span><div className="avatar">D</div></div></header>
 
       <div className="content">
         {notice && <div className="notice"><span>✓</span>{notice}<button onClick={() => setNotice("")}>×</button></div>}
@@ -138,6 +155,15 @@ export default function Home() {
           <div className="youtubeResultsHeading"><h2>{youtubeVideos.length ? "Search results" : "Find something to watch"}</h2><span>{youtubeVideos.length ? `${youtubeVideos.length} videos` : "Search public videos"}</span></div>
           {youtubeVideos.length ? <div className="youtubeResults">{youtubeVideos.map(video => <button type="button" className={"youtubeVideoCard " + (selectedVideo?.id === video.id ? "selected" : "")} key={video.id} onClick={() => setSelectedVideo(video)}><span className="youtubeThumbWrap"><img src={video.thumbnail} alt="" className="youtubeThumb" loading="lazy" /><span className="youtubePlayBadge">▶</span></span><span className="youtubeVideoInfo"><strong>{video.title}</strong><small>{video.channelTitle}</small><small>{video.publishedAt ? new Date(video.publishedAt).toLocaleDateString() : ""}</small></span></button>)}</div> : <div className="emptyState youtubeEmpty"><span className="emptyIcon youtubeEmptyIcon">▶</span><h2>Search the YouTube library</h2><p>Enter a topic, video title, or channel above. Choose a result to load the embedded player.</p></div>}
           <p className="finePrint">Some videos disable embedding or may be restricted by their owner, region, or network. If playback is unavailable, use “Open on YouTube.”</p>
+        </section>}
+
+
+        {tab === "shorts" && <section className="dataPage shortsPage"><div className="eyebrow">QUICK WATCH</div><h1>Watch <em>Shorts.</em></h1><p className="pageCopy">Search YouTube for short-form videos and watch them in a vertical player. You don't need to connect your Google account.</p>
+          <form className="searchBar" onSubmit={e => { e.preventDefault(); searchShorts(); }}><span>⌕</span><input value={shortsQuery} onChange={e => setShortsQuery(e.target.value)} placeholder="Search Shorts: gaming, sports, music…" aria-label="Search YouTube Shorts" /><button type="submit" disabled={busy}>{busy ? "Searching…" : "Find Shorts"}</button></form>
+          {selectedShort && <section className="shortsPlayerPanel"><div className="shortsPlayer"><iframe src={"https://www.youtube-nocookie.com/embed/" + selectedShort.id + "?rel=0"} title={selectedShort.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div><div className="shortsNowPlaying"><h2>{selectedShort.title}</h2><p>{selectedShort.channelTitle}</p><a className="textLink" href={"https://www.youtube.com/shorts/" + selectedShort.id} target="_blank" rel="noreferrer">Open Short on YouTube ↗</a></div></section>}
+          <div className="youtubeResultsHeading"><h2>{shortsVideos.length ? "Short video results" : "Find a Short"}</h2><span>{shortsVideos.length ? `${shortsVideos.length} results` : "Search by topic"}</span></div>
+          {shortsVideos.length ? <div className="shortsResults">{shortsVideos.map(video => <button type="button" className={"shortsVideoCard " + (selectedShort?.id === video.id ? "selected" : "")} key={video.id} onClick={() => setSelectedShort(video)}><span className="shortsThumbWrap"><img src={video.thumbnail} alt="" loading="lazy" /><span className="youtubePlayBadge">▶</span></span><span className="youtubeVideoInfo"><strong>{video.title}</strong><small>{video.channelTitle}</small></span></button>)}</div> : <div className="emptyState youtubeEmpty"><span className="emptyIcon youtubeEmptyIcon">▮</span><h2>Discover short videos</h2><p>Enter a topic above and choose a result to watch it in the vertical player.</p></div>}
+          <p className="finePrint">YouTube's Data API does not provide a dedicated Shorts-only search filter. These results are short-duration videos (under 4 minutes), so some may not be official Shorts. Some videos may disable embedding; use “Open Short on YouTube” if playback is unavailable.</p>
         </section>}
 
         {tab === "privacy" && <section className="dataPage"><div className="eyebrow">BUILT AROUND TRUST</div><h1>Your data, <em>your call.</em></h1><p className="pageCopy">Google Services uses Google’s consent screen. It cannot access your account until you approve it.</p><div className="privacyGrid"><article><span className="privacyIcon">⌑</span><h2>Encrypted credentials</h2><p>OAuth tokens are encrypted with AES-256-GCM before server-side database storage. Encryption keys and database service credentials belong in server environment variables only.</p></article><article><span className="privacyIcon">◉</span><h2>Limited permissions</h2><p>The app requests Gmail read-only and Drive metadata read-only access. It does not send email, delete files, or change Drive sharing.</p></article><article><span className="privacyIcon">↗</span><h2>Disconnect anytime</h2><p>Disconnect clears this app’s stored session and asks Google to revoke its token. You can also review connected apps in your Google Account.</p></article><article><span className="privacyIcon">◎</span><h2>No fake data</h2><p>When disconnected, the app shows setup guidance instead of example emails or files. Results come from Google APIs after authorization.</p></article></div>{connected && <button className="button buttonDanger" onClick={disconnect} disabled={busy}>{busy ? "Disconnecting…" : "Disconnect Google account"}</button>}<p className="finePrint">If Google Workspace says access is blocked by an administrator, this app cannot override that policy.</p></section>}
