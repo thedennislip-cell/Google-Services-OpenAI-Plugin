@@ -9,6 +9,7 @@ A mobile-friendly Next.js dashboard for viewing your own Gmail messages and Goog
 - HTTP-only, Secure, SameSite=Lax cookies.
 - Gmail read-only search/list endpoint.
 - Drive metadata-only search/list endpoint.
+- YouTube Data API search endpoint with server-side API key handling and embedded playback for videos that allow it.
 - AES-256-GCM encrypted token storage in Supabase, server-side only.
 - Token refresh, disconnect, and revoke flow.
 - Baseline security headers.
@@ -45,6 +46,7 @@ Copy the values into Vercel Project Settings → Environment Variables. Do not c
 - `APP_ENCRYPTION_KEY` — use a long, random server-only secret
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `YOUTUBE_API_KEY` — YouTube Data API v3 key; server-side only, restricted to the YouTube Data API v3.
 
 Redeploy after setting or changing environment variables.
 
@@ -55,6 +57,7 @@ Redeploy after setting or changing environment variables.
 3. Review the Google consent screen and approve only if you recognize the app and requested permissions.
 4. Test Gmail search and Drive file listing.
 5. Test **Disconnect Google account**.
+6. Open **YouTube**, search for a public video, and try playback. Some videos disable embedding.
 
 Requested scopes are OpenID/email identity, Gmail read-only, and Drive metadata read-only. Google may apply additional verification or Workspace administrator restrictions. The OAuth flow is not ready until real credentials and Supabase configuration are added and tested.
 
@@ -64,3 +67,13 @@ Requested scopes are OpenID/email identity, Gmail read-only, and Drive metadata 
 - Tokens are encrypted before storage using AES-256-GCM. The encryption key is read only on the server.
 - Keep the repository private if you later add project-specific configuration.
 - If a Google account is blocked by a Workspace administrator, use an account you are authorized to connect or ask the administrator about access.
+
+## 6. Enable YouTube search
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), select the project you want to use.
+2. Open **APIs & Services → Library**, search for **YouTube Data API v3**, and enable it.
+3. Open **APIs & Services → Credentials** and create an API key.
+4. Restrict the key under **API restrictions** to **YouTube Data API v3**. Because the key is used by a server route, do not expose it in client code or use an HTTP referrer restriction intended for browser-side calls. If your hosting setup provides stable outbound IPs, consider an IP restriction too.
+5. In Vercel → Project Settings → Environment Variables, add `YOUTUBE_API_KEY` with the key value for Production (and Preview if needed), then redeploy.
+
+The API key is used only by `/api/youtube` on the server. Search is for public video metadata; this feature does not read a user's YouTube account. YouTube embedding and access remain subject to YouTube's settings and any network or administrator restrictions.
