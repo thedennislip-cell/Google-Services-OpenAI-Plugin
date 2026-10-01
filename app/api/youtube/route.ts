@@ -22,12 +22,14 @@ export async function GET(request: Request) {
     );
   }
 
+  const shortsOnly = url.searchParams.get("shorts") === "true";
   const params = new URLSearchParams({
     key: apiKey,
     part: "snippet",
     type: "video",
     maxResults: "12",
     safeSearch: "moderate",
+    ...(shortsOnly ? { videoDuration: "short" } : {}),
     q: query,
   });
 
