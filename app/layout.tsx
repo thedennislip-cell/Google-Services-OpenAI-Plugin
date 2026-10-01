@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Google Services — Mail & Drive",
-  description: "A private dashboard for your own Gmail and Google Drive account.",
+  title: "Google Services — Mail, Drive & YouTube",
+  description: "A private dashboard for Gmail and Google Drive, with public YouTube video search and playback.",
   applicationName: "Google Services"
 };
 
