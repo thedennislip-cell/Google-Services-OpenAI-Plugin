@@ -17,9 +17,10 @@ export default function Home() {
   const [youtubeQuery, setYoutubeQuery] = useState("");
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
-  const [shortsQuery, setShortsQuery] = useState("");
+  const [shortsQuery, setShortsQuery] = useState("trending shorts");
   const [shortsVideos, setShortsVideos] = useState<YouTubeVideo[]>([]);
-  const [selectedShort, setSelectedShort] = useState<YouTubeVideo | null>(null);
+  const [activeShortIndex, setActiveShortIndex] = useState(0);
+  const [loadingMoreShorts, setLoadingMoreShorts] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -79,18 +80,47 @@ export default function Home() {
     finally { setBusy(false); }
   };
 
-  const searchShorts = async () => {
-    const query = shortsQuery.trim();
+  const searchShorts = async (queryOverride?: string) => {
+    const query = (queryOverride ?? shortsQuery).trim();
     if (query.length < 2) { setError("Enter at least 2 characters to search Shorts."); return; }
-    setBusy(true); setError(""); setNotice(""); setSelectedShort(null);
+    setShortsQuery(query);
+    setBusy(true); setError(""); setNotice("");
     try {
-      const response = await fetch("/api/youtube?q=" + encodeURIComponent(query) + "&shorts=true", { cache: "no-store" });
+      const orders = ["relevance", "date", "rating", "viewCount"];
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const response = await fetch("/api/youtube?q=" + encodeURIComponent(query) + "&shorts=true&order=" + order, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not search Shorts.");
-      setShortsVideos(data.videos || []);
-      if (!(data.videos || []).length) setNotice("No short videos found. Try a different search.");
+      const videos = (data.videos || []) as YouTubeVideo[];
+      for (let i = videos.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [videos[i], videos[j]] = [videos[j], videos[i]];
+      }
+      setShortsVideos(videos);
+      setActiveShortIndex(0);
+      if (!videos.length) setNotice("No short videos found. Try a different search.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not search Shorts."); }
     finally { setBusy(false); }
+  };
+
+  const loadMoreShorts = async () => {
+    if (loadingMoreShorts || !shortsVideos.length) return;
+    setLoadingMoreShorts(true);
+    try {
+      const orders = ["relevance", "date", "rating", "viewCount"];
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const response = await fetch("/api/youtube?q=" + encodeURIComponent(shortsQuery.trim()) + "&shorts=true&order=" + order, { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load more Shorts.");
+      const existing = new Set(shortsVideos.map(video => video.id));
+      const fresh = ((data.videos || []) as YouTubeVideo[]).filter(video => !existing.has(video.id));
+      for (let i = fresh.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [fresh[i], fresh[j]] = [fresh[j], fresh[i]];
+      }
+      if (fresh.length) setShortsVideos(current => [...current, ...fresh]);
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not load more Shorts."); }
+    finally { setLoadingMoreShorts(false); }
   };
 
   const disconnect = async () => {
@@ -108,7 +138,7 @@ export default function Home() {
     <aside className="sidebar">
       <a className="brand" href="/" aria-label="Google Services home"><span className="brandIcon">G</span><span>Google Services<small>MAIL & DRIVE</small></span></a>
       <div className="sideLabel">WORKSPACE</div>
-      {(["overview", "gmail", "drive", "youtube", "shorts", "privacy"] as const).map(item => <button key={item} className={"navItem " + (tab === item ? "active" : "")} onClick={() => setTab(item)}>
+      {(["overview", "gmail", "drive", "youtube", "shorts", "privacy"] as const).map(item => <button key={item} className={"navItem " + (tab === item ? "active" : "")} onClick={() => { setTab(item); if (item === "shorts" && !shortsVideos.length && !busy) searchShorts("trending shorts"); }}>
         <span className="navIcon">{item === "overview" ? "◫" : item === "gmail" ? "✉" : item === "drive" ? "▱" : item === "youtube" ? "▶" : item === "shorts" ? "▮" : "◇"}</span>
         {item === "overview" ? "Overview" : item === "gmail" ? "Gmail" : item === "drive" ? "Google Drive" : item === "youtube" ? "YouTube" : item === "shorts" ? "Shorts" : "Privacy & security"}
         {item === "gmail" || item === "drive" ? <span className="navLock">•</span> : null}
@@ -158,12 +188,15 @@ export default function Home() {
         </section>}
 
 
-        {tab === "shorts" && <section className="dataPage shortsPage"><div className="eyebrow">QUICK WATCH</div><h1>Watch <em>Shorts.</em></h1><p className="pageCopy">Search YouTube for short-form videos and watch them in a vertical player. You don't need to connect your Google account.</p>
-          <form className="searchBar" onSubmit={e => { e.preventDefault(); searchShorts(); }}><span>⌕</span><input value={shortsQuery} onChange={e => setShortsQuery(e.target.value)} placeholder="Search Shorts: gaming, sports, music…" aria-label="Search YouTube Shorts" /><button type="submit" disabled={busy}>{busy ? "Searching…" : "Find Shorts"}</button></form>
-          {selectedShort && <section className="shortsPlayerPanel"><div className="shortsPlayer"><iframe src={"https://www.youtube-nocookie.com/embed/" + selectedShort.id + "?rel=0"} title={selectedShort.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div><div className="shortsNowPlaying"><h2>{selectedShort.title}</h2><p>{selectedShort.channelTitle}</p><a className="textLink" href={"https://www.youtube.com/shorts/" + selectedShort.id} target="_blank" rel="noreferrer">Open Short on YouTube ↗</a></div></section>}
-          <div className="youtubeResultsHeading"><h2>{shortsVideos.length ? "Short video results" : "Find a Short"}</h2><span>{shortsVideos.length ? `${shortsVideos.length} results` : "Search by topic"}</span></div>
-          {shortsVideos.length ? <div className="shortsResults">{shortsVideos.map(video => <button type="button" className={"shortsVideoCard " + (selectedShort?.id === video.id ? "selected" : "")} key={video.id} onClick={() => setSelectedShort(video)}><span className="shortsThumbWrap"><img src={video.thumbnail} alt="" loading="lazy" /><span className="youtubePlayBadge">▶</span></span><span className="youtubeVideoInfo"><strong>{video.title}</strong><small>{video.channelTitle}</small></span></button>)}</div> : <div className="emptyState youtubeEmpty"><span className="emptyIcon youtubeEmptyIcon">▮</span><h2>Discover short videos</h2><p>Enter a topic above and choose a result to watch it in the vertical player.</p></div>}
-          <p className="finePrint">YouTube's Data API does not provide a dedicated Shorts-only search filter. These results are short-duration videos (under 4 minutes), so some may not be official Shorts. Some videos may disable embedding; use “Open Short on YouTube” if playback is unavailable.</p>
+        {tab === "shorts" && <section className="dataPage shortsPage"><div className="shortsHeader"><div><div className="eyebrow">PERSONAL DISCOVERY</div><h1>Shorts <em>feed.</em></h1><p className="pageCopy">Scroll vertically to discover another short video. Results are shuffled from YouTube search, not your personal YouTube recommendations.</p></div><form className="shortsSearchBar" onSubmit={e => { e.preventDefault(); searchShorts(); }}><input value={shortsQuery} onChange={e => setShortsQuery(e.target.value)} placeholder="Search a topic…" aria-label="Search Shorts" /><button type="submit" disabled={busy}>{busy ? "Loading…" : "Explore"}</button></form></div>
+          {shortsVideos.length ? <div className="shortsFeed" onScroll={e => { const el = e.currentTarget; const nextIndex = Math.round(el.scrollTop / el.clientHeight); setActiveShortIndex(current => current === nextIndex ? current : nextIndex); if (nextIndex >= shortsVideos.length - 3) void loadMoreShorts(); }} aria-label="Scrollable YouTube Shorts feed">
+            {shortsVideos.map((video, index) => <article className="shortsFeedSlide" key={video.id}>
+              <div className="shortsFeedPlayer">{index === activeShortIndex ? <iframe src={"https://www.youtube-nocookie.com/embed/" + video.id + "?autoplay=1&mute=1&playsinline=1&controls=1&rel=0"} title={video.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /> : <button type="button" className="shortsPoster" onClick={() => setActiveShortIndex(index)} aria-label={"Play " + video.title}><img src={video.thumbnail} alt="" loading="lazy" /><span>▶</span></button>}</div>
+              <div className="shortsFeedInfo"><span className="shortsFeedCount">{index + 1} / {shortsVideos.length}</span><h2>{video.title}</h2><p>{video.channelTitle}</p><a href={"https://www.youtube.com/shorts/" + video.id} target="_blank" rel="noreferrer">Open on YouTube ↗</a></div>
+            </article>)}
+            {loadingMoreShorts && <div className="shortsLoadingMore">Finding more videos…</div>}
+          </div> : <div className="emptyState youtubeEmpty"><span className="emptyIcon youtubeEmptyIcon">▮</span><h2>{busy ? "Finding Shorts…" : "Discover short videos"}</h2><p>{busy ? "Loading a feed for you." : "Search for a topic above to start scrolling."}</p>{!busy && <button className="button buttonPrimary" onClick={() => searchShorts("trending shorts")}>Load trending Shorts</button>}</div>}
+          <p className="finePrint">The public YouTube Data API cannot provide YouTube’s personalized Shorts algorithm or identify official Shorts reliably. These are shuffled short-duration videos (under 4 minutes); some may not be Shorts, and some videos may block embedded playback. Autoplay depends on your browser settings.</p>
         </section>}
 
         {tab === "privacy" && <section className="dataPage"><div className="eyebrow">BUILT AROUND TRUST</div><h1>Your data, <em>your call.</em></h1><p className="pageCopy">Google Services uses Google’s consent screen. It cannot access your account until you approve it.</p><div className="privacyGrid"><article><span className="privacyIcon">⌑</span><h2>Encrypted credentials</h2><p>OAuth tokens are encrypted with AES-256-GCM before server-side database storage. Encryption keys and database service credentials belong in server environment variables only.</p></article><article><span className="privacyIcon">◉</span><h2>Limited permissions</h2><p>The app requests Gmail read-only and Drive metadata read-only access. It does not send email, delete files, or change Drive sharing.</p></article><article><span className="privacyIcon">↗</span><h2>Disconnect anytime</h2><p>Disconnect clears this app’s stored session and asks Google to revoke its token. You can also review connected apps in your Google Account.</p></article><article><span className="privacyIcon">◎</span><h2>No fake data</h2><p>When disconnected, the app shows setup guidance instead of example emails or files. Results come from Google APIs after authorization.</p></article></div>{connected && <button className="button buttonDanger" onClick={disconnect} disabled={busy}>{busy ? "Disconnecting…" : "Disconnect Google account"}</button>}<p className="finePrint">If Google Workspace says access is blocked by an administrator, this app cannot override that policy.</p></section>}
