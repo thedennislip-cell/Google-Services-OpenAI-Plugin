@@ -23,6 +23,9 @@ export async function GET(request: Request) {
   }
 
   const shortsOnly = url.searchParams.get("shorts") === "true";
+  const allowedOrders = new Set(["relevance", "date", "rating", "viewCount"]);
+  const requestedOrder = url.searchParams.get("order") || "relevance";
+  const order = allowedOrders.has(requestedOrder) ? requestedOrder : "relevance";
   const params = new URLSearchParams({
     key: apiKey,
     part: "snippet",
@@ -30,6 +33,7 @@ export async function GET(request: Request) {
     maxResults: "12",
     safeSearch: "moderate",
     ...(shortsOnly ? { videoDuration: "short" } : {}),
+    ...(shortsOnly ? { order } : {}),
     q: query,
   });
 
