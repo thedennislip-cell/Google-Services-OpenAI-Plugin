@@ -10,3 +10,22 @@
 .youtubeIcon{background:#fff0ef;color:#d93025}.youtubeResultsHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 13px}.youtubeResultsHeading h2{font:700 17px Manrope,sans-serif;margin:0}.youtubeResultsHeading>span{font-size:11px;color:#929aaa}.youtubeResults{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.youtubeVideoCard{border:1px solid var(--line);background:white;border-radius:12px;overflow:hidden;text-align:left;padding:0;min-width:0;color:var(--ink);transition:border-color .15s,transform .15s}.youtubeVideoCard:hover,.youtubeVideoCard.selected{border-color:#a9b9ff}.youtubeVideoCard:hover{transform:translateY(-2px)}.youtubeThumbWrap{display:block;position:relative;aspect-ratio:16/9;background:#eef0f5;overflow:hidden}.youtubeThumb{display:block;width:100%;height:100%;object-fit:cover}.youtubePlayBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#171717d9;color:white;border-radius:9px;padding:8px 12px;font-size:15px;opacity:0;transition:opacity .15s}.youtubeVideoCard:hover .youtubePlayBadge,.youtubeVideoCard.selected .youtubePlayBadge{opacity:1}.youtubeVideoInfo{display:flex;flex-direction:column;gap:7px;padding:13px}.youtubeVideoInfo strong{font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}.youtubeVideoInfo small{font-size:10px;color:#8991a0;overflow-wrap:anywhere}.youtubePlayerPanel{margin:20px 0 26px;background:white;border:1px solid var(--line);border-radius:13px;overflow:hidden}.youtubePlayer{aspect-ratio:16/9;background:#111}.youtubePlayer iframe{width:100%;height:100%;border:0;display:block}.youtubeNowPlaying{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px}.youtubeNowPlaying h2{font:700 14px/1.5 Manrope,sans-serif;margin:0 0 4px}.youtubeNowPlaying p{font-size:11px;color:#8991a0;margin:0}.youtubeNowPlaying .textLink{flex-shrink:0;margin:0}.youtubeEmpty{margin-top:10px}.youtubeEmptyIcon{background:#fff0ef;color:#d93025}
 @media(max-width:900px){.youtubeResults{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.youtubeResults{grid-template-columns:1fr;gap:12px}.youtubeVideoCard{display:grid;grid-template-columns:42% 1fr;align-items:start}.youtubeVideoInfo{padding:10px}.youtubeNowPlaying{align-items:flex-start;flex-direction:column;gap:8px;padding:13px}.youtubeResultsHeading{margin-top:22px}}
+
+
+/* YouTube Shorts tab */
+.shortsIcon{background:#f1edff;color:#6c4ed9}
+.shortsResults{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.shortsVideoCard{border:1px solid var(--line);background:white;border-radius:12px;overflow:hidden;text-align:left;padding:0;min-width:0;color:var(--ink);transition:border-color .15s,transform .15s}
+.shortsVideoCard:hover,.shortsVideoCard.selected{border-color:#a9b9ff}
+.shortsVideoCard:hover{transform:translateY(-2px)}
+.shortsThumbWrap{display:block;position:relative;aspect-ratio:9/12;background:#eef0f5;overflow:hidden}
+.shortsThumbWrap img{display:block;width:100%;height:100%;object-fit:cover}
+.shortsPlayerPanel{display:flex;align-items:flex-start;gap:22px;margin:20px 0 26px;background:white;border:1px solid var(--line);border-radius:13px;overflow:hidden;padding:18px}
+.shortsPlayer{aspect-ratio:9/16;width:min(100%,330px);flex:0 0 min(45%,330px);background:#111;border-radius:10px;overflow:hidden}
+.shortsPlayer iframe{width:100%;height:100%;border:0;display:block}
+.shortsNowPlaying{padding:8px 4px;min-width:0}
+.shortsNowPlaying h2{font:700 15px/1.5 Manrope,sans-serif;margin:0 0 7px;overflow-wrap:anywhere}
+.shortsNowPlaying p{font-size:11px;color:#8991a0;margin:0}
+.shortsNowPlaying .textLink{display:inline-block;margin-top:16px}
+@media(max-width:900px){.shortsResults{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.shortsResults{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.shortsPlayerPanel{flex-direction:column;align-items:center;padding:12px;gap:12px}.shortsPlayer{width:min(100%,320px);flex-basis:auto}.shortsNowPlaying{width:100%;padding:4px}.shortsVideoInfo{padding:10px}}
