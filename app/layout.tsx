@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
+import Reflect4Widget from "./reflect4-widget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,13 +18,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <div id="r4-widget-form"></div>
+        <Reflect4Widget />
         {children}
-        <Script
-          src="https://www-reflect4.run.place/widget/widget.js"
-          data-id="r4-widget-connection"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
