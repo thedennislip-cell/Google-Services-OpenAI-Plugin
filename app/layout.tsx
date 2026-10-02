@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,13 +15,16 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return ( <html lang="en">
-      <head>
-        <script async src="https://www-reflect4.run.place/widget/widget.js" data-id="r4-widget-connection"></script>
-      </head>
+  return (
+    <html lang="en">
       <body>
         <div id="r4-widget-form"></div>
         {children}
+        <Script
+          src="https://www-reflect4.run.place/widget/widget.js"
+          data-id="r4-widget-connection"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
