@@ -14,5 +14,15 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return (
+    <html lang="en">
+      <head>
+        <script async src="https://www-reflect4.run.place/widget/widget.js" data-id="r4-widget-connection"></script>
+      </head>
+      <body>
+        <div id="r4-widget-form"></div>
+        {children}
+      </body>
+    </html>
+  );
 }
