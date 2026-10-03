@@ -6,8 +6,8 @@ export const STATE_COOKIE = "gs_oauth_state";
 export const SCOPES = [
   "openid",
   "email",
-  "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/drive.metadata.readonly"
+  "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/drive"
 ];
 
 export type GoogleTokens = {
@@ -133,9 +133,10 @@ export async function getSessionTokens(request: Request): Promise<{ sessionId: s
   return { sessionId: decodeURIComponent(sessionId), tokens: next };
 }
 
-export async function googleFetch(path: string, tokens: GoogleTokens) {
+export async function googleFetch(path: string, tokens: GoogleTokens, init: RequestInit = {}) {
   const response = await fetch("https://www.googleapis.com/" + path, {
-    headers: { Authorization: "Bearer " + tokens.access_token },
+    ...init,
+    headers: { Authorization: "Bearer " + tokens.access_token, ...(init.headers || {}) },
     cache: "no-store"
   });
   if (!response.ok) {
